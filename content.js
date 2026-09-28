@@ -1,4 +1,4 @@
-const GITHUB_JSON_URL = "";
+const GITHUB_JSON_URL = "https://raw.githubusercontent.com/Nyaruko166/Delta-Force-Auto-Code-Redeemer/refs/heads/master/resource/codes.json";
 
 let GIFT_CODES = [];
 
