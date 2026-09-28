@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Delta Force Auto Code Redeemer",
+  "version": "1.2",
+  "description": "Automates input and submission of gift codes fetched from GitHub.",
+  "permissions": ["activeTab"],
+  "host_permissions": [
+    "https://raw.githubusercontent.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.garena.sg/*",
+        "*://*.garena.com/*",
+        "*://*.playdeltaforce.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
