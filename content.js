@@ -1,13 +1,18 @@
+const DEBUG = false;
+
 const GITHUB_JSON_URL = "https://raw.githubusercontent.com/Nyaruko166/Delta-Force-Auto-Code-Redeemer/refs/heads/master/resource/codes.json";
 
+// Dynamic code list store
 let GIFT_CODES = [];
 
 const SELECTORS = {
   input: 'input.exc-input',
-  submitBtn: 'a.btn-exchange'
+  submitBtn: 'a.btn-exchange',
+  superTips: '#superTips',
+  diaTips: '#diaTips'
 };
 
-const DELAY_MS = 2500;
+const DELAY_BETWEEN_CODES_MS = 2500;
 
 function setInputValue(inputEl, value) {
   const valueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
@@ -17,6 +22,30 @@ function setInputValue(inputEl, value) {
   inputEl.dispatchEvent(new Event('change', { bubbles: true }));
   inputEl.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
   inputEl.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+}
+
+// Get exact raw text from tips elements
+function getRawResponseText() {
+  const diaTips = document.querySelector(SELECTORS.diaTips);
+  const superTips = document.querySelector(SELECTORS.superTips);
+
+  // Check success dialog (#diaTips) first
+  if (diaTips && window.getComputedStyle(diaTips).display !== 'none') {
+    const pText = diaTips.querySelector('p')?.textContent.trim() || diaTips.textContent.trim();
+
+    // Auto close modal dialog
+    const closeBtn = diaTips.querySelector('a.btn-close');
+    if (closeBtn) closeBtn.click();
+
+    return pText;
+  }
+
+  // Check error message (#superTips)
+  if (superTips && superTips.textContent.trim() !== '') {
+    return superTips.textContent.trim();
+  }
+
+  return 'No response text';
 }
 
 // Fetch gift codes from GitHub
@@ -56,13 +85,13 @@ async function runAutoRedeem() {
 
   for (let i = 0; i < GIFT_CODES.length; i++) {
     const code = GIFT_CODES[i];
-    logEl.innerText = `[${i + 1}/${GIFT_CODES.length}] Inputting: ${code}`;
+    logEl.innerText = `[${i + 1}/${GIFT_CODES.length}] Processing: ${code}...`;
 
     const inputEl = document.querySelector(SELECTORS.input);
     const submitBtn = document.querySelector(SELECTORS.submitBtn);
 
     if (!inputEl) {
-      logEl.innerText = "Error: Input field not found.";
+      logEl.innerText = "Error: Input element not found.";
       startBtn.disabled = false;
       startBtn.innerText = "Start Auto Redeem";
       return;
@@ -70,16 +99,27 @@ async function runAutoRedeem() {
 
     inputEl.focus();
     setInputValue(inputEl, code);
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 300));
+
+    // Clear previous error text
+    const superTips = document.querySelector(SELECTORS.superTips);
+    if (superTips) superTips.textContent = '';
 
     if (submitBtn) {
       submitBtn.click();
-      logEl.innerText = `[${i + 1}/${GIFT_CODES.length}] Submitted: ${code}`;
-    } else {
-      logEl.innerText = `[${i + 1}/${GIFT_CODES.length}] Filled: ${code}`;
+
+      // Wait for server response/DOM mutation
+      await new Promise(r => setTimeout(r, 1200));
+
+      const rawText = getRawResponseText();
+      const logMessage = `[${i + 1}/${GIFT_CODES.length}] ${code}: ${rawText}`;
+
+      logEl.innerText = logMessage;
+
+      if (DEBUG) console.log(logMessage);
     }
 
-    await new Promise(r => setTimeout(r, DELAY_MS));
+    await new Promise(r => setTimeout(r, DELAY_BETWEEN_CODES_MS - 1200));
   }
 
   logEl.innerText = "Finished processing all codes!";
@@ -110,15 +150,13 @@ function injectUI() {
 
   overlay.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-      <span style="font-weight: bold; color: #10b981;">Delta Force Auto Code Redeemer</span>
+      <span style="font-weight: bold; color: #10b981;">Delta Force Auto-Redeem</span>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <!-- Facebook Link -->
         <a href="https://www.facebook.com/nyaruko166" target="_blank" title="Facebook" style="color: #9ca3af; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#1877F2'" onmouseout="this.style.color='#9ca3af'">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
           </svg>
         </a>
-        <!-- GitHub Link -->
         <a href="https://github.com/Nyaruko166/Delta-Force-Auto-Code-Redeemer" target="_blank" title="GitHub" style="color: #9ca3af; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#9ca3af'">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
@@ -137,7 +175,7 @@ function injectUI() {
       cursor: pointer;
       font-weight: bold;
     ">Start Auto Redeem</button>
-    <div id="auto-code-log" style="margin-top: 10px; font-size: 11px; color: #d1d5db; min-height: 18px;">Initializing...</div>
+    <div id="auto-code-log" style="margin-top: 10px; font-size: 11px; color: #d1d5db; min-height: 18px; word-break: break-word;">Initializing...</div>
   `;
 
   document.body.appendChild(overlay);
