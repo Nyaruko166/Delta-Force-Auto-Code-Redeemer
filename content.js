@@ -1,27 +1,31 @@
 const DEBUG = false;
 
-const GITHUB_JSON_URL = "https://raw.githubusercontent.com/Nyaruko166/Delta-Force-Auto-Code-Redeemer/refs/heads/master/resource/codes.json";
+const GITHUB_JSON_URL =
+  "https://raw.githubusercontent.com/Nyaruko166/Delta-Force-Auto-Code-Redeemer/refs/heads/master/resource/codes.json5";
 
 // Dynamic code list store
 let GIFT_CODES = [];
 
 const SELECTORS = {
-  input: 'input.exc-input',
-  submitBtn: 'a.btn-exchange',
-  superTips: '#superTips',
-  diaTips: '#diaTips'
+  input: "input.exc-input",
+  submitBtn: "a.btn-exchange",
+  superTips: "#superTips",
+  diaTips: "#diaTips",
 };
 
 const DELAY_BETWEEN_CODES_MS = 2500;
 
 function setInputValue(inputEl, value) {
-  const valueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+  const valueSetter = Object.getOwnPropertyDescriptor(
+    window.HTMLInputElement.prototype,
+    "value",
+  ).set;
   valueSetter.call(inputEl, value);
 
-  inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-  inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-  inputEl.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
-  inputEl.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+  inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+  inputEl.dispatchEvent(new Event("change", { bubbles: true }));
+  inputEl.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true }));
+  inputEl.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true }));
 }
 
 // Get exact raw text from tips elements
@@ -30,28 +34,30 @@ function getRawResponseText() {
   const superTips = document.querySelector(SELECTORS.superTips);
 
   // Check success dialog (#diaTips) first
-  if (diaTips && window.getComputedStyle(diaTips).display !== 'none') {
-    const pText = diaTips.querySelector('p')?.textContent.trim() || diaTips.textContent.trim();
+  if (diaTips && window.getComputedStyle(diaTips).display !== "none") {
+    const pText =
+      diaTips.querySelector("p")?.textContent.trim() ||
+      diaTips.textContent.trim();
 
     // Auto close modal dialog
-    const closeBtn = diaTips.querySelector('a.btn-close');
+    const closeBtn = diaTips.querySelector("a.btn-close");
     if (closeBtn) closeBtn.click();
 
     return pText;
   }
 
   // Check error message (#superTips)
-  if (superTips && superTips.textContent.trim() !== '') {
+  if (superTips && superTips.textContent.trim() !== "") {
     return superTips.textContent.trim();
   }
 
-  return 'No response text';
+  return "No response text";
 }
 
 // Fetch gift codes from GitHub
 async function fetchCodesFromGitHub() {
-  const countEl = document.getElementById('auto-code-count');
-  const logEl = document.getElementById('auto-code-log');
+  const countEl = document.getElementById("auto-code-count");
+  const logEl = document.getElementById("auto-code-log");
 
   if (logEl) logEl.innerText = "Fetching codes from GitHub...";
 
@@ -59,7 +65,7 @@ async function fetchCodesFromGitHub() {
     const response = await fetch(GITHUB_JSON_URL, { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-    GIFT_CODES = await response.json();
+    GIFT_CODES = JSON5.parse(await response.text());
 
     if (countEl) countEl.innerText = `Loaded Codes: ${GIFT_CODES.length}`;
     if (logEl) logEl.innerText = "Codes loaded successfully.";
@@ -69,8 +75,8 @@ async function fetchCodesFromGitHub() {
 }
 
 async function runAutoRedeem() {
-  const logEl = document.getElementById('auto-code-log');
-  const startBtn = document.getElementById('auto-code-start-btn');
+  const logEl = document.getElementById("auto-code-log");
+  const startBtn = document.getElementById("auto-code-start-btn");
 
   if (!GIFT_CODES || GIFT_CODES.length === 0) {
     await fetchCodesFromGitHub();
@@ -99,17 +105,17 @@ async function runAutoRedeem() {
 
     inputEl.focus();
     setInputValue(inputEl, code);
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 300));
 
     // Clear previous error text
     const superTips = document.querySelector(SELECTORS.superTips);
-    if (superTips) superTips.textContent = '';
+    if (superTips) superTips.textContent = "";
 
     if (submitBtn) {
       submitBtn.click();
 
       // Wait for server response/DOM mutation
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 1200));
 
       const rawText = getRawResponseText();
       const logMessage = `[${i + 1}/${GIFT_CODES.length}] ${code}: ${rawText}`;
@@ -119,7 +125,7 @@ async function runAutoRedeem() {
       if (DEBUG) console.log(logMessage);
     }
 
-    await new Promise(r => setTimeout(r, DELAY_BETWEEN_CODES_MS - 1200));
+    await new Promise((r) => setTimeout(r, DELAY_BETWEEN_CODES_MS - 1200));
   }
 
   logEl.innerText = "Finished processing all codes!";
@@ -128,10 +134,10 @@ async function runAutoRedeem() {
 }
 
 function injectUI() {
-  if (document.getElementById('auto-code-overlay')) return;
+  if (document.getElementById("auto-code-overlay")) return;
 
-  const overlay = document.createElement('div');
-  overlay.id = 'auto-code-overlay';
+  const overlay = document.createElement("div");
+  overlay.id = "auto-code-overlay";
   overlay.style.cssText = `
     position: fixed;
     top: 20px;
@@ -179,13 +185,15 @@ function injectUI() {
   `;
 
   document.body.appendChild(overlay);
-  document.getElementById('auto-code-start-btn').addEventListener('click', runAutoRedeem);
+  document
+    .getElementById("auto-code-start-btn")
+    .addEventListener("click", runAutoRedeem);
 
   fetchCodesFromGitHub();
 }
 
-if (document.readyState === 'complete') {
+if (document.readyState === "complete") {
   injectUI();
 } else {
-  window.addEventListener('load', injectUI);
+  window.addEventListener("load", injectUI);
 }

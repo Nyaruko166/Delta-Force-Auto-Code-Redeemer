@@ -1,9 +1,26 @@
 {
   "manifest_version": 3,
   "name": "Delta Force Auto Code Redeemer",
-  "version": "1.2",
+  "version": "1.3",
   "description": "Automates input and submission of gift codes fetched from GitHub.",
-  "permissions": ["activeTab"],
+  "icons": {
+    "16": "./resource/ico/BlasphemousGrenadeMegamix_16.png",
+    "32": "./resource/ico/BlasphemousGrenadeMegamix_32.png",
+    "48": "./resource/ico/BlasphemousGrenadeMegamix_48.png",
+    "128": "./resource/ico/BlasphemousGrenadeMegamix_128.png"
+  },
+  "action": {
+      "default_icon": {
+        "16": "./resource/ico/BlasphemousGrenadeMegamix_16.png",
+        "32": "./resource/ico/BlasphemousGrenadeMegamix_32.png",
+        "48": "./resource/ico/BlasphemousGrenadeMegamix_48.png",
+        "128": "./resource/ico/BlasphemousGrenadeMegamix_128.png"
+      },
+      "default_title": "Delta Force Auto Redeem"
+    },
+  "permissions": [
+    "activeTab"
+  ],
   "host_permissions": [
     "https://raw.githubusercontent.com/*"
   ],
@@ -14,7 +31,10 @@
         "*://*.garena.com/*",
         "*://*.playdeltaforce.com/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "json5.min.js",
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ]
